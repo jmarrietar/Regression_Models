@@ -1,6 +1,6 @@
 ---
 title: "Regression Models Course Project"
-output: pdf_document
+output: html_document
 ---
 **Name :** Jose Miguel Arrieta Ramos 
 
@@ -10,21 +10,110 @@ In this project is it is supposed i work for Motor Trend, a magazine about the a
 1) "Is an automatic or manual transmission better for MPG"
 2) "Quantify the MPG difference between automatic and manual transmissions"
 
+**Load libraries and Data**
+
+```{r,message=FALSE}
+library(UsingR); data(mtcars)
+library(ggplot2)
+```
+
+
+
+**Cleaning Data**
+The column named **am** is the column with the Transmission 0 for Automatic and 1 for Manual but its numeric just has 0 and 1 . I replaced with factor variable Automatic and Manual for better understanding.
+
 ```{r}
-summary(cars)
+# create factors with value labels 
+mtcars$am <- factor(mtcars$am,levels=c(0,1),
+                    labels=c("Automatic","Manual")) 
 ```
 
-You can also embed plots, for example:
 
-```{r, echo=FALSE}
-plot(cars)
+**Exploratory Analysis**
+The first step was to do a series of exploratories plots to see how the data behave in the two categories Automatic and manual. 
+
+```{r qplot,fig.width=3,fig.height=3}
+#Mulpiple Boxplots 
+
+boxplot(mpg~am,data=mtcars,col="red")
+
+# Boxplots of mpg by am 
+# observations (points) are overlayed and jittered
+qplot(am, mpg, data=mtcars, geom=c("boxplot", "jitter"), 
+      fill=am, main="Mileage by Transmission",
+      xlab="Transmission", ylab="Miles per Gallon")
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+As you can see in the graphics, the mean MPG of automatic cars is lower than the mean of manual cars. 
+The data in Manual cars is more disperse than automatic cars. 
+
+
+```{r, fig.width=3,fig.height=3}
+#ggplo2 
+qplot(qsec,mpg,data=mtcars,color=am)
+```
+
+```{r,fig.width=3,fig.height=3}
+#MPG vs Transmission
+
+plot(mtcars$mpg~jitter(as.numeric(mtcars$am)),col="blue",xaxt="n",pch=19)
+axis(side=1,at=unique(as.numeric(mtcars$am)),labels=unique(mtcars$am))
+
+meanMPG<-tapply(mtcars$mpg,mtcars$am,mean)
+points(1:2,meanMPG,col="red",pch="-",cex=5)
+```
+
+
+***Question 1:***
+It seems than Automatic is better than Manual for mpg 
+
+
 
 **Methods**
+For this case is going to be used a regression models with the predictors as factor and the outcome as numeric value. 
 
+Yi=b0+b1(Ti="Manual")
+
+*(Ti="Manual " )is a logic value that is one if the Transmission is "Manual" and zero otherwise. 
+
+```{r}
+lm1<-lm(mtcars$mpg~as.factor(mtcars$am))
+summary(lm1)
+```
+
+
+**COnfident intervals**
+This are the values with 95% certainty that the intercept and slope would be . 
+
+```{r}
+confint(lm1,level=0.95)
+```
+
+***Question 2 :*** 
+"Quantify the MPG difference between automatic and manual transmissions"
+
+b0= ->is the average of the Automatics car . 
+
+b0+b1= -> is the average of Manual cars 
+
+Dif Automatic - Manual  ->b0-(b0+b1)=-b1 ->-7.24
 
 **Results**
 
+**Residual analysis**
+
+```{r,fig.width=3,fig.height=3}
+plot(as.factor(mtcars$am), resid(lm1));
+abline(h = 0)
+```
+
+
+Anova
+```{r}
+anova(lm1)
+```
+
+The R-squared is kind of low , in a future work maybe the anylysys should include more predictors. 
 
